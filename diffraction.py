@@ -1,3 +1,4 @@
+from email.headerregistry import ContentTransferEncodingHeader
 import math
 import cmath
 from PIL import Image
@@ -57,15 +58,50 @@ def waveToIntensity(u2):
     u3=(u3/np.max(u3))*256
     return u3
 
-u1=np.full((9,9),0+0j)
-u1[4][4]=1
+def impulse_response(ramuda:float,z:float,p:float,u1):
+    """
+    波形からフーリエ変換を行う関数
 
-u2=normal_fresnel_diffraction(pow(10,-5),6*pow(10,-7),10,9,u1)
-u3=waveToIntensity(u2)
+    Parameters
+    ----------
+    p : float
+        画素ピッチ(1~100um)
+    ramuda : float
+        光の波長(400~800nm)
+    z:float
+        伝搬面と伝搬先の距離
+        フレネルなのでz>>0.2m
+    u1: complex[N][N]
+        伝搬面の波
+    Returns
+    -------
+    h2: complex[N][N]
+        伝搬先の波
+    """
+    N=len(u1)
+    h2=np.full((N,N),0+0j)
+    
+    coefficient=(1j*math.pi)/(ramuda*z)
+    for a in range(N):
+        for b in range(N):
+            dx=(a-2/N)*p
+            dy=(b-2/N)*p
+            phase=coefficient*(dx*dx+dy*dy)
+            res=cmath.exp(phase)
+            h2[a,b]=res
+    return h2
+            
 
-boxelPlate=Image.new("L",(9,9),256)
-for l in range(9):
-    for k in range(9):
-        boxelPlate.putpixel((l,k),int(u3[l,k]))
+#ローカルでは動かせないけど、500*500を保存しておく
+# u1=np.full((500,500),0+0j)
+# u1[250][250]=1
 
-boxelPlate.show()
+# u2=normal_fresnel_diffraction(pow(10,-5),6*pow(10,-7),10,500,u1)
+# u3=waveToIntensity(u2)
+
+# boxelPlate=Image.new("L",(500,500),256)
+# for l in range(500):
+#     for k in range(500):
+#         boxelPlate.putpixel((l,k),int(u3[l,k]))
+
+# boxelPlate.show()
