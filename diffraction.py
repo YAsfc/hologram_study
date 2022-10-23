@@ -6,7 +6,7 @@ import numpy as np
 import latexify
 
 @latexify.with_latex
-def normal_fresnel_diffraction(p:float,ramuda:float,z:float,N:int,u1):
+def normal_fresnel_diffraction(p:float,ramuda:float,z:float,u1):
     """
     フーリエ変換を用いないフレネル回折の実装
 
@@ -29,6 +29,10 @@ def normal_fresnel_diffraction(p:float,ramuda:float,z:float,N:int,u1):
     u2: complex[N][N]
         伝搬先の波
     """
+    if len(u1)!=len(u1[0]):
+        raise(NotSquareError("u1 size is not square"))
+
+    N=len(u1)
 
     u2=np.full((N,N),0+0j)
     coefficient=1j*math.pi/(ramuda*z)
@@ -49,6 +53,9 @@ def waveToIntensity(u2):
     """
     波形データから強度を返す関数
     """
+    if len(u2)!=len(u2[0]):
+        raise(NotSquareError("u2 size is not square"))
+    
     size=len(u2)
     u3=np.full((size,size),0+0j)
     for l in range(size):
@@ -78,6 +85,9 @@ def impulse_response(ramuda:float,z:float,p:float,u1):
     h2: complex[N][N]
         伝搬先の波
     """
+    if len(u1)!=len(u1[0]):
+        raise(NotSquareError("u1 size is not square"))
+
     N=len(u1)
     h2=np.full((N,N),0+0j)
     
@@ -91,6 +101,31 @@ def impulse_response(ramuda:float,z:float,p:float,u1):
             h2[a,b]=res
     return h2
             
+def zero_padding(u1):
+    """
+    ゼロパディングを行う関数
+    """
+    if len(u1)!=len(u1[0]):
+        raise(NotSquareError("u1 size is not square"))
+    
+    N=len(u1)
+    u2=np.full((2*N,2*N),0+0j)
+    for l in range(N):
+        for m in range(N):
+            u2[l+int(2/N)][m+int(2/N)]=u1[l][m]
+            
+    return u2
+
+    
+
+
+class NotSquareError(Exception):
+    """正方形で無いときに発火させるエラーです"""
+    pass
+
+
+print(zero_padding([[2,1],[3,1]]))
+
 
 #ローカルでは動かせないけど、500*500を保存しておく
 # u1=np.full((500,500),0+0j)
